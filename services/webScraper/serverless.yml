@@ -1,0 +1,43 @@
+service: lfr-webScraper
+
+# Use the serverless-webpack plugin to transpile ES6
+plugins:
+  - serverless-webpack
+  - serverless-offline
+
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules: true
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  stage: dev
+  region: us-east-1
+
+  environment:
+    tableName: ${file(../charactersDatabase/serverless.yml):custom.tableName}
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem
+        - dynamodb:GetItem
+      Resource:
+        - "Fn::ImportValue": ${self:custom.stage}-CharactersTableArn
+
+functions:
+  webScraper:
+    handler: webScraper.main
+    name: ${self:custom.stage}-lfr-webScraper
+    description: "Web scraper to get character data."
+    events:
+      - schedule: rate(5 minutes)
+    timeout: 15
+    environment:
+      baseUrl: https://www.wowprogress.com
+      daysUntilExpiration: 3
+      lfgUrl: /gearscore/us?lfg=1&sortby=ts
+      pollInterval: 5

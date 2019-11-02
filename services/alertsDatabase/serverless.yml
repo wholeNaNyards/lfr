@@ -1,0 +1,41 @@
+service: lfr-alerts-database
+
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  tableName: ${self:custom.stage}-lfr-alerts
+  tableThroughputs:
+    prod: 5
+    default: 1
+  tableThroughput: ${self:custom.tableThroughputs.${self:custom.stage}, self:custom.tableThroughputs.default}
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  stage: dev
+  region: us-east-1
+
+resources:
+  Resources:
+    AlertsTable:
+      Type: AWS::DynamoDB::Table
+      DeletionPolicy: Retain
+      Properties:
+        TableName: ${self:custom.tableName}
+        AttributeDefinitions:
+          - AttributeName: channelId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: channelId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: ${self:custom.tableThroughput}
+          WriteCapacityUnits: ${self:custom.tableThroughput}
+
+  Outputs:
+    AlertsTableArn:
+      Value:
+        Fn::GetAtt:
+          - AlertsTable
+          - Arn
+      Export:
+        Name: ${self:custom.stage}-AlertsTableArn

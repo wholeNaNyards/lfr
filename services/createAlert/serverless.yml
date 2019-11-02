@@ -1,0 +1,53 @@
+service: lfr-createAlert
+
+# Use the serverless-webpack plugin to transpile ES6
+plugins:
+  - serverless-webpack
+  - serverless-offline
+
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules: true
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  stage: dev
+  region: us-east-1
+  memorySize: 128
+  timeout: 15
+  usagePlan:
+    throttle:
+      burstLimit: 1
+      rateLimit: 1
+
+  environment:
+    tableName: ${file(../alertsDatabase/serverless.yml):custom.tableName}
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem
+        - dynamodb:GetItem
+      Resource:
+        - "Fn::ImportValue": ${self:custom.stage}-AlertsTableArn
+
+functions:
+  createAlert:
+    handler: createAlert.main
+    name: ${self:custom.stage}-lfr-createAlert
+    description: "Function to get Discord access token and store in Database with alert settings"
+    events:
+      - http:
+          path: alerts
+          method: post
+          cors: True
+    environment:
+      tokenUrl: https://discordapp.com/api/oauth2/token
+      localhost: http://localhost:3000
+      origin: http://localhost:3000
+      clientId: "TMP"
+      clientSecret: "TMP"
+      redirectUri: http://localhost:3000

@@ -1,0 +1,37 @@
+service: lfr-webhook
+
+plugins:
+  - serverless-webpack
+  - serverless-offline
+
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules: true
+  environment: ${file(env.yml):${self:custom.stage}, file(env.yml):default}
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  stage: dev
+  region: us-east-1
+
+functions:
+  webhook:
+    handler: webhook.main
+    name: ${self:custom.stage}-lfr-webhook
+    description: "Webhook that sends data to subscribed channels."
+    memorySize: 128
+    timeout: 10
+    events:
+      - stream:
+          type: dynamodb
+          batchSize: 100
+          startingPosition: LATEST
+          arn:
+            Fn::ImportValue: ${self:custom.stage}-CharactersTableStreamArn
+    environment:
+      endpoint: https://raider.io/api/v1/characters/profile?region=us
+      fields: gear,raid_progression,mythic_plus_best_runs
+      webhookEndpoint: ${self:custom.environment.webhookEndpoint}
