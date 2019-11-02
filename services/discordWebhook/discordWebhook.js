@@ -1,8 +1,11 @@
 import axios from "axios";
+import AWS from "aws-sdk";
 
-const webhook = process.env.webhookEndpoint;
-const endpoint = process.env.endpoint;
-const fields = process.env.fields;
+const region = process.env.AWS_REGION;
+AWS.config.update({ region });
+var DDB = new AWS.DynamoDB({ apiVersion: "2012-10-08" });
+
+const { tableName, characterDataEndpoint, webhookEndpoint } = process.env;
 
 const classColorMap = {
   "Death Knight": "12853051",
@@ -21,13 +24,10 @@ const classColorMap = {
 
 export function main(event, context, callback) {
   event.Records.forEach(record => {
+    // Only trigger this lambda if an Insert into the table occurred
     if (record.eventName == "INSERT") {
       const characterName = record.dynamodb.NewImage.Name.S;
       const characterRealm = record.dynamodb.NewImage.Realm.S;
-      const characterRealmSafe = characterRealm
-        .replace("'", "")
-        .replace(" ", "-")
-        .toLowerCase();
 
       const characterInfo = record.dynamodb.NewImage.Info
         ? record.dynamodb.NewImage.Info.S
@@ -36,132 +36,218 @@ export function main(event, context, callback) {
 
       console.log("Fetching data for character: " + characterName);
 
-      const url = `${endpoint}&name=${characterName}&realm=${characterRealm}&fields=${fields}`;
+      const url = `${characterDataEndpoint}&name=${characterName}&realm=${characterRealm}&fields=gear,raid_progression,mythic_plus_best_runs`;
 
       axios
         .get(url)
-        .then(function({ data }) {
-          console.log("Successfully fetched data.");
+        .then(function({ characterData }) {
+          console.log("Successfully fetched character data.");
 
-          if (data.faction.toLowerCase() !== "alliance") {
-            console.log(
-              "Faction not alliance. Returning. Faction: " + data.faction
-            );
-            return;
-          }
-
-          const characterSpec = data.active_spec_name;
-          const characterClass = data.class;
-          let characterRace = data.race;
-
-          if (characterRace === "Pandaren") {
-            if (data.faction.toLowerCase === "alliance") {
-              characterRace = "Alliance " + characterRace;
+          console.log("Attempting to read from Alerts table.");
+          // Loop through each Alert settings, either returning or creating Webhook
+          DDB.scan({ TableName: tableName }, function(err, alerts) {
+            if (err) {
+              console.log("Error connecting to Alerts table.");
+              console.log(err, err.stack);
             } else {
-              characterRace = "Horde " + characterRace;
-            }
-          }
+              if (alerts && alerts.Items && Array.isArray(alerts.Items)) {
+                console.log("Successfully found items in Alerts table.");
 
-          const characterILvl = data.gear.item_level_equipped;
-          const characterColor = classColorMap[characterClass];
-          const characterThumbnail = data.thumbnail_url;
-          const characterUldirProgression =
-            data.raid_progression["uldir"].summary;
-          const characterBoDProgression =
-            data.raid_progression["battle-of-dazaralor"].summary;
-          const characterCrucibleProgression =
-            data.raid_progression["crucible-of-storms"].summary;
-          const characterTEPProgression =
-            data.raid_progression["the-eternal-palace"].summary;
+                console.log("Start of loop through each Alert");
+                alerts.Items.forEach(alert => {
+                  const { webhookToken, webhookId } = alert;
+                  const alertSettings = JSON.parse(alert.alertSettings);
 
-          const filteredDungeons = data.mythic_plus_best_runs.filter(
-            dungeon => dungeon.num_keystone_upgrades > 0
-          );
-
-          let dungeons = data.mythic_plus_best_runs;
-
-          if (filteredDungeons && filteredDungeons.length > 0) {
-            dungeons = filteredDungeons;
-          }
-
-          let bestDungeon = dungeons[0];
-
-          for (let i = 1; i < dungeons.length; i++) {
-            const dungeon = dungeons[i];
-
-            if (dungeon.mythic_level > bestDungeon.mythic_level) {
-              bestDungeon = dungeon;
-            } else if (dungeon.mythic_level === bestDungeon.mythic_level) {
-              if (dungeon.clear_time_ms < bestDungeon.clear_time_ms) {
-                bestDungeon = dungeon;
-              }
-            }
-          }
-
-          let dungeonKeyUpgrade = "";
-          for (let i = 0; i < bestDungeon.num_keystone_upgrades; i++) {
-            dungeonKeyUpgrade += "+";
-          }
-
-          const dungeonLevel = dungeonKeyUpgrade + bestDungeon.mythic_level;
-          const dungeonName = bestDungeon.short_name;
-
-          const dungeonTime = msToTime(bestDungeon.clear_time_ms);
-
-          const armoryLink = `https://worldofwarcraft.com/en-us/character/${characterRealmSafe}/${characterName}`;
-          const wowProgressLink = `https://www.wowprogress.com/character/us/${characterRealmSafe}/${characterName}`;
-          const raiderIOLink = `https://raider.io/characters/us/${characterRealmSafe}/${characterName}`;
-          const warcraftLogsLink = `https://www.warcraftlogs.com/character/us/${characterRealmSafe}/${characterName}`;
-
-          const payload = {
-            content: "A player is looking for a guild!",
-            username: "Recruitment Bot",
-            embeds: [
-              {
-                author: {
-                  name: `${characterName} - ${characterRealm} (US) | ${characterRace} ${characterSpec} ${characterClass} | ${characterILvl} ilvl`,
-                  url: characterUrl
-                },
-                color: characterColor,
-                thumbnail: {
-                  url: characterThumbnail
-                },
-                fields: [
-                  {
-                    name: "__Recent Raid Progression__",
-                    value: `**Uldir:** ${characterUldirProgression}\n**Battle of Dazar'alor:** ${characterBoDProgression}\n**Crucible of Storms:** ${characterCrucibleProgression}\n**The Eternal Palace:** ${characterTEPProgression}`,
-                    inline: true
-                  },
-                  {
-                    name: "__Best M+ Dungeon__",
-                    value: `**${dungeonLevel}** - ${dungeonName} - ${dungeonTime}`,
-                    inline: true
-                  },
-                  {
-                    name: "__Bio__",
-                    value: characterInfo ? characterInfo : "No bio posted..."
-                  },
-                  {
-                    name: "__External Sites__",
-                    value: `[Armory](${armoryLink}) | [RaiderIO](${raiderIOLink}) | [WoWProgress](${wowProgressLink}) | [WarcraftLogs](${warcraftLogsLink})`
-                  },
-                  {
-                    name: "__Original Posting__",
-                    value: characterUrl
+                  // Check if this character matches the Selected Faction
+                  const characterFaction = characterData.faction.toLowerCase();
+                  if (
+                    alertSettings.selectedFaction !== "both" &&
+                    characterFaction !== alertSettings.selectedFaction
+                  ) {
+                    return;
                   }
-                ]
-              }
-            ]
-          };
 
-          axios
-            .post(webhook, payload)
-            .then(function(response) {
-              console.log("Webhook sent.");
-            })
-            .catch(function(error) {
-              console.log("Error sending webhook", error);
-            });
+                  // Check if this character matches the Selected Realm
+                  const characterRealmSafe = characterRealm
+                    .replace("'", "")
+                    .replace(" ", "-")
+                    .toLowerCase();
+                  if (
+                    alertSettings.selectedRealm !== "any" &&
+                    characterRealmSafe !== alertSettings.selectedRealm
+                  ) {
+                    return;
+                  }
+
+                  // Check if this character matches the Selected iLvl
+                  const characterILvl = characterData.gear.item_level_equipped;
+                  if (
+                    alertSettings.selectedILvl !== "any" &&
+                    characterILvl < parseInt(alertSettings.selectedILvl)
+                  ) {
+                    return;
+                  }
+
+                  // Check if this character matches the Selected Classes
+                  const characterClass = characterData.class;
+                  if (
+                    alertSettings.selectedClassOptions !== "specific" &&
+                    !alertSettings.selectedClasses.includes(
+                      characterClass
+                        .split(" ")
+                        .join("-")
+                        .toLowerCase()
+                    )
+                  ) {
+                    return;
+                  }
+
+                  // Check if this character matches the Selected Progression
+                  const characterTEPData =
+                    characterData.raid_progression["the-eternal-palace"];
+                  const characterBoDData =
+                    characterData.raid_progression["battle-of-dazaralor"];
+                  if (
+                    alertSettings.selectedProgressionOptions !== "specific" &&
+                    (characterTEPData["mythic_bosses_killed"] <
+                      parseInt(alertSettings.selectedProgressionTEPM) ||
+                      characterTEPData["heroic_bosses_killed"] <
+                        parseInt(alertSettings.selectedProgressionTEPH) ||
+                      characterBoDData["mythic_bosses_killed"] <
+                        parseInt(alertSettings.selectedProgressionBoDM) ||
+                      characterBoDData["heroic_bosses_killed"] <
+                        parseInt(alertSettings.selectedProgressionBoDH))
+                  ) {
+                    return;
+                  }
+
+                  let characterRace = characterData.race;
+
+                  if (characterRace === "Pandaren") {
+                    if (characterFaction === "alliance") {
+                      characterRace = "Alliance " + characterRace;
+                    } else {
+                      characterRace = "Horde " + characterRace;
+                    }
+                  }
+
+                  const characterColor = classColorMap[characterClass];
+                  const characterThumbnail = characterData.thumbnail_url;
+                  const characterUldirProgression =
+                    characterData.raid_progression["uldir"].summary;
+                  const characterBoDProgression = characterBoDData.summary;
+                  const characterCrucibleProgression =
+                    characterData.raid_progression["crucible-of-storms"]
+                      .summary;
+                  const characterTEPProgression = characterTEPData.summary;
+
+                  const filteredDungeons = characterData.mythic_plus_best_runs.filter(
+                    dungeon => dungeon.num_keystone_upgrades > 0
+                  );
+
+                  let dungeons = characterData.mythic_plus_best_runs;
+
+                  if (filteredDungeons && filteredDungeons.length > 0) {
+                    dungeons = filteredDungeons;
+                  }
+
+                  let bestDungeon = dungeons[0];
+
+                  for (let i = 1; i < dungeons.length; i++) {
+                    const dungeon = dungeons[i];
+
+                    if (dungeon.mythic_level > bestDungeon.mythic_level) {
+                      bestDungeon = dungeon;
+                    } else if (
+                      dungeon.mythic_level === bestDungeon.mythic_level
+                    ) {
+                      if (dungeon.clear_time_ms < bestDungeon.clear_time_ms) {
+                        bestDungeon = dungeon;
+                      }
+                    }
+                  }
+
+                  let dungeonKeyUpgrade = "";
+                  for (let i = 0; i < bestDungeon.num_keystone_upgrades; i++) {
+                    dungeonKeyUpgrade += "+";
+                  }
+
+                  const dungeonLevel =
+                    dungeonKeyUpgrade + bestDungeon.mythic_level;
+                  const dungeonName = bestDungeon.short_name;
+
+                  const dungeonTime = msToTime(bestDungeon.clear_time_ms);
+
+                  const armoryLink = `https://worldofwarcraft.com/en-us/character/${characterRealmSafe}/${characterName}`;
+                  const wowProgressLink = `https://www.wowprogress.com/character/us/${characterRealmSafe}/${characterName}`;
+                  const raiderIOLink = `https://raider.io/characters/us/${characterRealmSafe}/${characterName}`;
+                  const warcraftLogsLink = `https://www.warcraftlogs.com/character/us/${characterRealmSafe}/${characterName}`;
+
+                  const payload = {
+                    content: "We found a player for you!",
+                    username: "Lfr.io Bot",
+                    embeds: [
+                      {
+                        author: {
+                          name: `${characterName} - ${characterRealm} (US) | ${characterRace} ${characterData.active_spec_name} ${characterClass} | ${characterILvl} ilvl`,
+                          url: characterUrl
+                        },
+                        color: characterColor,
+                        thumbnail: {
+                          url: characterThumbnail
+                        },
+                        fields: [
+                          {
+                            name: "__Recent Raid Progression__",
+                            value: `**Uldir:** ${characterUldirProgression}\n**Battle of Dazar'alor:** ${characterBoDProgression}\n**Crucible of Storms:** ${characterCrucibleProgression}\n**The Eternal Palace:** ${characterTEPProgression}`,
+                            inline: true
+                          },
+                          {
+                            name: "__Best M+ Dungeon__",
+                            value: `**${dungeonLevel}** - ${dungeonName} - ${dungeonTime}`,
+                            inline: true
+                          },
+                          {
+                            name: "__Bio__",
+                            value: characterInfo
+                              ? characterInfo
+                              : "No bio posted..."
+                          },
+                          {
+                            name: "__External Sites__",
+                            value: `[Armory](${armoryLink}) | [RaiderIO](${raiderIOLink}) | [WoWProgress](${wowProgressLink}) | [WarcraftLogs](${warcraftLogsLink})`
+                          },
+                          {
+                            name: "__Original Posting__",
+                            value: characterUrl
+                          },
+                          {
+                            name: "__More...__",
+                            value:
+                              "Edit and customize these Alert settings at [lookingforraid.io](https://lookingforraid.io)."
+                          }
+                        ]
+                      }
+                    ]
+                  };
+
+                  axios
+                    .post(
+                      `${webhookEndpoint}/${webhookId}/${webhookToken}`,
+                      payload
+                    )
+                    .then(function(response) {
+                      console.log("Webhook sent.");
+                    })
+                    .catch(function(error) {
+                      console.log("Error sending webhook", error);
+                    });
+                });
+              } else {
+                console.log("No entries found in Alerts table.");
+              }
+            }
+          });
         })
         .catch(function(error) {
           console.log(error);

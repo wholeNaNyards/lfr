@@ -1,6 +1,5 @@
 service: lfr-webScraper
 
-# Use the serverless-webpack plugin to transpile ES6
 plugins:
   - serverless-webpack
   - serverless-offline
