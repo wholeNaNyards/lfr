@@ -289,7 +289,7 @@ export function main(event, context, callback) {
                           {
                             name: "__More...__",
                             value:
-                              "Edit and customize these Alert settings at [lookingforraid.io](https://lookingforraid.io)."
+                              "Edit and customize these alert settings at [lookingforraid.io](https://lookingforraid.io)."
                           }
                         ]
                       }
