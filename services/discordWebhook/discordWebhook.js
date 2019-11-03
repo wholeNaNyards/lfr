@@ -69,6 +69,12 @@ export function main(event, context, callback) {
                     alertSettings.selectedFaction !== "both" &&
                     characterFaction !== alertSettings.selectedFaction
                   ) {
+                    console.log("Faction doesn't match, skipping.");
+                    console.log("characterFaction: ", characterFaction);
+                    console.log(
+                      "alertSettings.selectedFaction: ",
+                      alertSettings.selectedFaction
+                    );
                     return;
                   }
 
@@ -81,6 +87,12 @@ export function main(event, context, callback) {
                     alertSettings.selectedRealm !== "any" &&
                     characterRealmSafe !== alertSettings.selectedRealm
                   ) {
+                    console.log("Realm doesn't match, skipping.");
+                    console.log("characterRealmSafe: ", characterRealmSafe);
+                    console.log(
+                      "alertSettings.selectedRealm: ",
+                      alertSettings.selectedRealm
+                    );
                     return;
                   }
 
@@ -90,6 +102,12 @@ export function main(event, context, callback) {
                     alertSettings.selectedILvl !== "any" &&
                     characterILvl < parseInt(alertSettings.selectedILvl)
                   ) {
+                    console.log("iLvl doesn't match, skipping.");
+                    console.log("characterILvl: ", characterILvl);
+                    console.log(
+                      "alertSettings.selectedILvl: ",
+                      alertSettings.selectedILvl
+                    );
                     return;
                   }
 
@@ -104,6 +122,12 @@ export function main(event, context, callback) {
                         .toLowerCase()
                     )
                   ) {
+                    console.log("Class doesn't match, skipping.");
+                    console.log("characterClass: ", characterClass);
+                    console.log(
+                      "alertSettings.selectedClasses: ",
+                      JSON.stringify(alertSettings.selectedClasses)
+                    );
                     return;
                   }
 
@@ -123,6 +147,39 @@ export function main(event, context, callback) {
                       characterBoDData["heroic_bosses_killed"] <
                         parseInt(alertSettings.selectedProgressionBoDH))
                   ) {
+                    console.log("Progression doesn't match, skipping.");
+                    console.log(
+                      "characterTEPData['mythic_bosses_killed']: ",
+                      characterTEPData["mythic_bosses_killed"]
+                    );
+                    console.log(
+                      "alertSettings.selectedProgressionTEPM: ",
+                      alertSettings.selectedProgressionTEPM
+                    );
+                    console.log(
+                      "characterTEPData['heroic_bosses_killed']: ",
+                      characterTEPData["heroic_bosses_killed"]
+                    );
+                    console.log(
+                      "alertSettings.selectedProgressionTEPH: ",
+                      alertSettings.selectedProgressionTEPH
+                    );
+                    console.log(
+                      "characterBoDData['mythic_bosses_killed']: ",
+                      characterBoDData["mythic_bosses_killed"]
+                    );
+                    console.log(
+                      "alertSettings.selectedProgressionBoDM: ",
+                      alertSettings.selectedProgressionBoDM
+                    );
+                    console.log(
+                      "characterBoDData['heroic_bosses_killed']: ",
+                      characterBoDData["heroic_bosses_killed"]
+                    );
+                    console.log(
+                      "alertSettings.selectedProgressionBoDH: ",
+                      alertSettings.selectedProgressionBoDH
+                    );
                     return;
                   }
 
