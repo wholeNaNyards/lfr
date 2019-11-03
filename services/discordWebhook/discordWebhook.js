@@ -40,7 +40,7 @@ export function main(event, context, callback) {
 
       axios
         .get(url)
-        .then(function({ characterData }) {
+        .then(function({ data: characterData }) {
           console.log("Successfully fetched character data.");
 
           console.log("Attempting to read from Alerts table.");
@@ -117,7 +117,7 @@ export function main(event, context, callback) {
                   // Check if this character matches the Selected Classes
                   const characterClass = characterData.class;
                   if (
-                    alertSettings.selectedClassOptions !== "specific" &&
+                    alertSettings.selectedClassOptions !== "all" &&
                     !alertSettings.selectedClasses.includes(
                       characterClass
                         .split(" ")
@@ -250,7 +250,7 @@ export function main(event, context, callback) {
 
                   const payload = {
                     content: "We found a player for you!",
-                    username: "Lfr.io Bot",
+                    username: "LFR Bot",
                     embeds: [
                       {
                         author: {
