@@ -60,8 +60,11 @@ export function main(event, context, callback) {
 
                 console.log("Start of loop through each Alert");
                 alerts.Items.forEach(alert => {
-                  const { webhookToken, webhookId } = alert;
-                  const alertSettings = JSON.parse(alert.alertSettings);
+                  console.log(alert);
+                  console.log(JSON.stringify(alert));
+                  const webhookId = alert.webhookId.S;
+                  const webhookToken = alert.webhookToken.S;
+                  const alertSettings = JSON.parse(alert.alertSettings.S);
 
                   // Check if this character matches the Selected Faction
                   const characterFaction = characterData.faction.toLowerCase();
