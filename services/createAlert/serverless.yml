@@ -47,7 +47,7 @@ functions:
     environment:
       tokenUrl: https://discordapp.com/api/oauth2/token
       localhost: http://localhost:3000
-      origin: http://localhost:3000
+      prodOrigin: https://lookingforraid.io
+      devOrigin: https://dev.lookingforraid.io
       clientId: "TMP"
       clientSecret: "TMP"
-      redirectUri: http://localhost:3000

@@ -2,7 +2,11 @@ import axios from "axios";
 import AWS from "aws-sdk";
 import qs from "querystring";
 
-const ALLOWED_ORIGINS = [process.env.localhost, process.env.origin];
+const ALLOWED_ORIGINS = [
+  process.env.localhost,
+  process.env.prodOrigin,
+  process.env.devOrigin
+];
 
 const region = process.env.AWS_REGION;
 AWS.config.update({ region });
@@ -13,7 +17,7 @@ const tokenUrl = process.env.tokenUrl;
 const client_id = process.env.clientId;
 const client_secret = process.env.clientSecret;
 const grant_type = "authorization_code";
-const redirect_uri = process.env.redirectUri;
+let redirect_uri = process.env.redirectUri;
 const scope = "webhook.incoming";
 
 export function main(event, context, callback) {
@@ -25,6 +29,7 @@ export function main(event, context, callback) {
       "Access-Control-Allow-Origin": origin,
       "Access-Control-Allow-Credentials": true
     };
+    redirect_uri = origin;
   } else {
     headers = {
       "Access-Control-Allow-Origin": "*"

@@ -50,7 +50,12 @@ export function main(event, context, callback) {
               console.log("Error connecting to Alerts table.");
               console.log(err, err.stack);
             } else {
-              if (alerts && alerts.Items && Array.isArray(alerts.Items)) {
+              if (
+                alerts &&
+                alerts.Items &&
+                Array.isArray(alerts.Items) &&
+                alerts.Items.length
+              ) {
                 console.log("Successfully found items in Alerts table.");
 
                 console.log("Start of loop through each Alert");
