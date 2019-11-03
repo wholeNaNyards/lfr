@@ -1,0 +1,52 @@
+service: lfr-deleteAlert
+
+# Use the serverless-webpack plugin to transpile ES6
+plugins:
+  - serverless-webpack
+  - serverless-offline
+
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules: true
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  stage: dev
+  region: us-east-1
+  memorySize: 128
+  timeout: 15
+  usagePlan:
+    throttle:
+      burstLimit: 1
+      rateLimit: 1
+
+  environment:
+    tableName: ${file(../alertsDatabase/serverless.yml):custom.tableName}
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:GetItem
+      Resource:
+        - "Fn::ImportValue": ${self:custom.stage}-AlertsTableArn
+
+functions:
+  deleteAlert:
+    handler: deleteAlert.main
+    name: ${self:custom.stage}-lfr-deleteAlert
+    description: "Function to delete alert from both Discord and database"
+    events:
+      - http:
+          path: alerts
+          method: delete
+          cors: True
+    environment:
+      tokenUrl: https://discordapp.com/api/oauth2/token
+      localhost: http://localhost:3000
+      prodOrigin: https://lookingforraid.io
+      devOrigin: https://dev.lookingforraid.io
+      clientId: "TMP"
+      clientSecret: "TMP"
