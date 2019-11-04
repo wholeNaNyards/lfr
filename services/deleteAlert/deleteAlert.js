@@ -100,6 +100,7 @@ export function main(event, context, callback) {
                 "Error reading from alerts table for channelId: " + channelId
               );
               console.log(err, err.stack);
+              callback(responseError);
             } else {
               console.log("ChannelId found, attempting to delete old Webhook.");
 
@@ -114,12 +115,38 @@ export function main(event, context, callback) {
                 axios
                   .delete(deleteWebhookUrl)
                   .then(response => {
-                    console.log("Successfully deleted webhook.");
-                    const responseSuccess = {
-                      statusCode: 200,
-                      headers
+                    console.log("Successfully deleted webhook from Discord.");
+
+                    console.log(
+                      "Attempting to delete Alert settings from Database"
+                    );
+
+                    const deleteParams = {
+                      Key: {
+                        channelId: { S: channelId }
+                      },
+                      TableName: tableName
                     };
-                    callback(null, responseSuccess);
+
+                    DDB.deleteItem(deleteParams, function(err) {
+                      if (err) {
+                        console.log(
+                          "Error deleting alert settings for channelId: " +
+                            channelId
+                        );
+                        console.log(err, err.stack);
+                        callback(responseError);
+                      } else {
+                        console.log(
+                          "Successfully deleted Alert settings from database"
+                        );
+                        const responseSuccess = {
+                          statusCode: 200,
+                          headers
+                        };
+                        callback(null, responseSuccess);
+                      }
+                    });
                   })
                   .catch(err => {
                     console.log("Error deleting webhook: ", err);
