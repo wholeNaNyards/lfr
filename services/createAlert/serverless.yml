@@ -15,6 +15,19 @@ provider:
   runtime: nodejs10.x
   stage: dev
   region: us-east-1
+  usagePlan:
+    throttle:
+      burstLimit: 1
+      rateLimit: 1
+
+  apiGateway:
+    restApiId:
+      "Fn::ImportValue": ${self:custom.stage}-AlertsApiId
+    restApiRootResourceId:
+      "Fn::ImportValue": ${self:custom.stage}-AlertsApiRootResourceId
+    restApiResources:
+      alerts:
+        "Fn::ImportValue": ${self:custom.stage}-AlertsApiResourceAlertsId
 
   iamRoleStatements:
     - Effect: Allow

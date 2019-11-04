@@ -1,0 +1,46 @@
+service: lfr-alertsApi
+
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  apiName: ${self:custom.stage}-lfr-alertsApi
+
+provider:
+  name: aws
+  runtime: nodejs10.x
+  stage: dev
+  region: us-east-1
+
+resources:
+  Resources:
+    AlertsApi:
+      Type: AWS::ApiGateway::RestApi
+      Properties:
+        Name: ${self:custom.apiName}
+
+    AlertsApiResourceAlerts:
+      Type: AWS::ApiGateway::Resource
+      Properties:
+        RestApiId: { Ref: "AlertsApi" }
+        ParentId: { Fn::GetAtt: "AlertsApi.RootResourceId" }
+        PathPart: alerts
+
+  Outputs:
+    AlertsApiId:
+      Value:
+        Ref: AlertsApi
+      Export:
+        Name: ${self:custom.stage}-AlertsApiId
+
+    AlertsApiRootResourceId:
+      Value:
+        Fn::GetAtt:
+          - AlertsApi
+          - RootResourceId
+      Export:
+        Name: ${self:custom.stage}-AlertsApiRootResourceId
+
+    AlertsApiResourceAlertsId:
+      Value:
+        Ref: AlertsApiResourceAlerts
+      Export:
+        Name: ${self:custom.stage}-AlertsApiResourceAlertsId
