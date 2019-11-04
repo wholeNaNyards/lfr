@@ -143,7 +143,7 @@ export function main(event, context, callback) {
                   const characterBoDData =
                     characterData.raid_progression["battle-of-dazaralor"];
                   if (
-                    alertSettings.selectedProgressionOptions !== "specific" &&
+                    alertSettings.selectedProgressionOptions !== "any" &&
                     (characterTEPData["mythic_bosses_killed"] <
                       parseInt(alertSettings.selectedProgressionTEPM) ||
                       characterTEPData["heroic_bosses_killed"] <
