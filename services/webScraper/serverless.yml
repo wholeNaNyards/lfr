@@ -1,5 +1,7 @@
 service: lfr-webScraper
 
+frameworkVersion: "1.43.0"
+
 plugins:
   - serverless-webpack
   - serverless-offline

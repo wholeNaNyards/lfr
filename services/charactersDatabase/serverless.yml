@@ -1,5 +1,7 @@
 service: lfr-charactersDatabase
 
+frameworkVersion: "1.43.0"
+
 custom:
   stage: ${opt:stage, self:provider.stage}
   tableName: ${self:custom.stage}-lfr-characters
