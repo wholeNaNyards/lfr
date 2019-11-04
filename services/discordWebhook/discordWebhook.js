@@ -63,8 +63,6 @@ export function main(event, context, callback) {
 
                 console.log("Start of loop through each Alert");
                 alerts.Items.forEach(alert => {
-                  console.log(alert);
-                  console.log(JSON.stringify(alert));
                   const webhookId = alert.webhookId.S;
                   const webhookToken = alert.webhookToken.S;
                   const alertSettings = JSON.parse(alert.alertSettings.S);
