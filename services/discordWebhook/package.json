@@ -1,5 +1,6 @@
 {
-  "name": "lfr",
+  "name": "lfr-discord-webhook",
+  "private": true,
   "version": "1.0.0",
   "description": "Discord Webhook service for lookingforraid.io",
   "scripts": {

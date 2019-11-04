@@ -5,7 +5,10 @@ const region = process.env.AWS_REGION;
 AWS.config.update({ region });
 var DDB = new AWS.DynamoDB({ apiVersion: "2012-10-08" });
 
-const { tableName, characterDataEndpoint, webhookEndpoint } = process.env;
+const { tableName } = process.env;
+const characterDataEndpoint =
+  "https://raider.io/api/v1/characters/profile?region=us";
+const webhookEndpoint = "https://discordapp.com/api/webhooks";
 
 const classColorMap = {
   "Death Knight": "12853051",

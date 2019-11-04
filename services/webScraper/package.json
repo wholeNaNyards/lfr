@@ -1,5 +1,6 @@
 {
-  "name": "lfr",
+  "name": "lfr-web-scraper",
+  "private": true,
   "version": "1.0.0",
   "description": "WebScraper service for lookingforraid.io",
   "scripts": {

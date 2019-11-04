@@ -1,4 +1,4 @@
-service: lfr-discord-webhook
+service: lfr-discordWebhook
 
 plugins:
   - serverless-webpack
@@ -12,12 +12,9 @@ custom:
 
 provider:
   name: aws
-  runtime: nodejs8.10
+  runtime: nodejs10.x
   stage: dev
   region: us-east-1
-
-  environment:
-    tableName: ${file(../alertsDatabase/serverless.yml):custom.tableName}
 
   iamRoleStatements:
     - Effect: Allow
@@ -29,10 +26,10 @@ provider:
 functions:
   discordWebhook:
     handler: discordWebhook.main
-    name: ${self:custom.stage}-lfr-discord-webhook
+    name: ${self:custom.stage}-lfr-discordWebhook
     description: "Discord Webhook that sends data to subscribed channels."
     memorySize: 128
-    timeout: 10
+    timeout: 15
     events:
       - stream:
           type: dynamodb
@@ -41,5 +38,4 @@ functions:
           arn:
             Fn::ImportValue: ${self:custom.stage}-CharactersTableStreamArn
     environment:
-      characterDataEndpoint: https://raider.io/api/v1/characters/profile?region=us
-      webhookEndpoint: https://discordapp.com/api/webhooks
+      tableName: ${file(../alertsDatabase/serverless.yml):custom.tableName}

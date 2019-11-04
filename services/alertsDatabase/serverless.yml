@@ -1,4 +1,4 @@
-service: lfr-alerts-database
+service: lfr-alertsDatabase
 
 custom:
   stage: ${opt:stage, self:provider.stage}
@@ -10,7 +10,7 @@ custom:
 
 provider:
   name: aws
-  runtime: nodejs8.10
+  runtime: nodejs10.x
   stage: dev
   region: us-east-1
 

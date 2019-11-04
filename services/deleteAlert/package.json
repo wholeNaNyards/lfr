@@ -1,5 +1,6 @@
 {
-  "name": "lfr",
+  "name": "lfr-delete-alert",
+  "private": true,
   "version": "1.0.0",
   "description": "DeleteAlert service for lookingforraid.io",
   "scripts": {

@@ -12,12 +12,9 @@ custom:
 
 provider:
   name: aws
-  runtime: nodejs8.10
+  runtime: nodejs10.x
   stage: dev
   region: us-east-1
-
-  environment:
-    tableName: ${file(../charactersDatabase/serverless.yml):custom.tableName}
 
   iamRoleStatements:
     - Effect: Allow
@@ -32,11 +29,9 @@ functions:
     handler: webScraper.main
     name: ${self:custom.stage}-lfr-webScraper
     description: "Web scraper to get character data."
+    memorySize: 128
+    timeout: 15
     events:
       - schedule: rate(5 minutes)
-    timeout: 15
     environment:
-      baseUrl: https://www.wowprogress.com
-      daysUntilExpiration: 3
-      lfgUrl: /gearscore/us?lfg=1&sortby=ts
-      pollInterval: 5
+      tableName: ${file(../charactersDatabase/serverless.yml):custom.tableName}

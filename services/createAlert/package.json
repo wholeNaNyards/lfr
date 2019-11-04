@@ -1,5 +1,6 @@
 {
-  "name": "lfr",
+  "name": "lfr-create-alert",
+  "private": true,
   "version": "1.0.0",
   "description": "CreateAlert service for lookingforraid.io",
   "scripts": {

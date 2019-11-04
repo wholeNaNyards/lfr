@@ -3,17 +3,17 @@ import AWS from "aws-sdk";
 import qs from "querystring";
 
 const ALLOWED_ORIGINS = [
-  process.env.localhost,
-  process.env.prodOrigin,
-  process.env.devOrigin
+  "http://localhost:3000",
+  "https://dev.lookingforraid.io",
+  "https://lookingforraid.io"
 ];
 
 const region = process.env.AWS_REGION;
 AWS.config.update({ region });
 var DDB = new AWS.DynamoDB({ apiVersion: "2012-10-08" });
 
+const tokenUrl = "https://discordapp.com/api/oauth2/token";
 const tableName = process.env.tableName;
-const tokenUrl = process.env.tokenUrl;
 const client_id = process.env.clientId;
 const client_secret = process.env.clientSecret;
 const grant_type = "authorization_code";

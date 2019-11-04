@@ -6,14 +6,14 @@ const region = process.env.AWS_REGION;
 AWS.config.update({ region });
 var DDB = new AWS.DynamoDB({ apiVersion: "2012-10-08" });
 
-const baseUrl = process.env.baseUrl;
-const lfgUrl = baseUrl + process.env.lfgUrl;
+const baseUrl = "https://www.wowprogress.com";
+const lfgUrl = `${baseUrl}/gearscore/us?lfg=1&sortby=ts`;
 
 const tableName = process.env.tableName;
 
-const daysUntilExpiration = parseInt(process.env.daysUntilExpiration);
+const daysUntilExpiration = 3;
 const secondsUntilExpiration = 60 * 60 * 24 * daysUntilExpiration;
-const pollInterval = parseInt(process.env.pollInterval);
+const pollInterval = 5;
 
 export function main(event, context, callback) {
   console.log("Attempting to contact endpoint.");
