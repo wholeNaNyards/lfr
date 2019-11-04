@@ -50,7 +50,6 @@ functions:
       - http:
           path: alerts
           method: post
-          cors: True
     environment:
       tableName: ${file(../alertsDatabase/serverless.yml):custom.tableName}
       clientId: "TMP"

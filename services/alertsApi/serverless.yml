@@ -26,6 +26,40 @@ resources:
         ParentId: { Fn::GetAtt: "AlertsApi.RootResourceId" }
         PathPart: alerts
 
+    AlertsApiMethodAlertsOptions:
+      Type: AWS::ApiGateway::Method
+      Properties:
+        AuthorizationType: NONE
+        RestApiId:
+          Ref: AlertsApi
+        ResourceId:
+          Ref: AlertsApiResourceAlerts
+        HttpMethod: OPTIONS
+        Integration:
+          IntegrationResponses:
+            - StatusCode: 200
+              ResponseParameters:
+                method.response.header.Access-Control-Allow-Origin: "'*'"
+                method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
+                method.response.header.Access-Control-Allow-Methods: "'POST,DELETE,OPTIONS'"
+                method.response.header.Access-Control-Allow-Credentials: "'false'"
+              ResponseTemplates:
+                application/json: "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\".*\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
+          PassthroughBehavior: WHEN_NO_MATCH
+          RequestTemplates:
+            application/json: '{"statusCode": 200}'
+          Type: MOCK
+          ContentHandling: CONVERT_TO_TEXT
+        MethodResponses:
+          - StatusCode: 200
+            ResponseModels:
+              application/json: "Empty"
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: true
+              method.response.header.Access-Control-Allow-Methods: true
+              method.response.header.Access-Control-Allow-Origin: true
+              method.response.header.Access-Control-Allow-Credentials: true
+
   Outputs:
     AlertsApiId:
       Value:

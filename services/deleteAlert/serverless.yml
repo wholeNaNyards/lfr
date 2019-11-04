@@ -49,7 +49,6 @@ functions:
       - http:
           path: alerts
           method: delete
-          cors: True
     environment:
       tableName: ${file(../alertsDatabase/serverless.yml):custom.tableName}
       clientId: "TMP"
