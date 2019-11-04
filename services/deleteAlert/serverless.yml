@@ -35,6 +35,7 @@ provider:
     - Effect: Allow
       Action:
         - dynamodb:GetItem
+        - dynamodb:DeleteItem
       Resource:
         - "Fn::ImportValue": ${self:custom.stage}-AlertsTableArn
 
