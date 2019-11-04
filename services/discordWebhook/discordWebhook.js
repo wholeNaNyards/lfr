@@ -220,35 +220,42 @@ export function main(event, context, callback) {
                     }
 
                     let bestDungeon = dungeons[0];
+                    let dungeonLevel = "";
+                    let dungeonName = "";
+                    let dungeonTime = "";
 
-                    for (let i = 1; i < dungeons.length; i++) {
-                      const dungeon = dungeons[i];
+                    if (bestDungeon) {
+                      for (let i = 1; i < dungeons.length; i++) {
+                        const dungeon = dungeons[i];
 
-                      if (dungeon.mythic_level > bestDungeon.mythic_level) {
-                        bestDungeon = dungeon;
-                      } else if (
-                        dungeon.mythic_level === bestDungeon.mythic_level
-                      ) {
-                        if (dungeon.clear_time_ms < bestDungeon.clear_time_ms) {
+                        if (dungeon.mythic_level > bestDungeon.mythic_level) {
                           bestDungeon = dungeon;
+                        } else if (
+                          dungeon.mythic_level === bestDungeon.mythic_level
+                        ) {
+                          if (
+                            dungeon.clear_time_ms < bestDungeon.clear_time_ms
+                          ) {
+                            bestDungeon = dungeon;
+                          }
                         }
                       }
+
+                      let dungeonKeyUpgrade = "";
+                      for (
+                        let i = 0;
+                        i < bestDungeon.num_keystone_upgrades;
+                        i++
+                      ) {
+                        dungeonKeyUpgrade += "+";
+                      }
+
+                      dungeonLevel =
+                        dungeonKeyUpgrade + bestDungeon.mythic_level;
+                      dungeonName = bestDungeon.short_name;
+
+                      dungeonTime = msToTime(bestDungeon.clear_time_ms);
                     }
-
-                    let dungeonKeyUpgrade = "";
-                    for (
-                      let i = 0;
-                      i < bestDungeon.num_keystone_upgrades;
-                      i++
-                    ) {
-                      dungeonKeyUpgrade += "+";
-                    }
-
-                    const dungeonLevel =
-                      dungeonKeyUpgrade + bestDungeon.mythic_level;
-                    const dungeonName = bestDungeon.short_name;
-
-                    const dungeonTime = msToTime(bestDungeon.clear_time_ms);
 
                     const armoryLink = `https://worldofwarcraft.com/en-us/character/${characterRealmSafe}/${characterName}`;
                     const wowProgressLink = `https://www.wowprogress.com/character/us/${characterRealmSafe}/${characterName}`;
@@ -276,7 +283,9 @@ export function main(event, context, callback) {
                             },
                             {
                               name: "__Best M+ Dungeon__",
-                              value: `**${dungeonLevel}** - ${dungeonName} - ${dungeonTime}`,
+                              value: bestDungeon
+                                ? `**${dungeonLevel}** - ${dungeonName} - ${dungeonTime}`
+                                : "No best dungeon found.",
                               inline: true
                             },
                             {
