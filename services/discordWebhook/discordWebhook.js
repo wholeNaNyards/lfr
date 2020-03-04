@@ -142,6 +142,11 @@ export function main(event, context, callback) {
                       characterData.raid_progression["the-eternal-palace"];
                     const characterBoDData =
                       characterData.raid_progression["battle-of-dazaralor"];
+                    const characterNyAData =
+                      characterData.raid_progression[
+                        "nyalotha-the-waking-city"
+                      ];
+
                     if (
                       alertSettings.selectedProgressionOptions !== "any" &&
                       (characterTEPData["mythic_bosses_killed"] <
@@ -208,6 +213,7 @@ export function main(event, context, callback) {
                       characterData.raid_progression["crucible-of-storms"]
                         .summary;
                     const characterTEPProgression = characterTEPData.summary;
+                    const characterNyAProgression = characterNyAData.summary;
 
                     const filteredDungeons = characterData.mythic_plus_best_runs.filter(
                       dungeon => dungeon.num_keystone_upgrades > 0
@@ -278,7 +284,7 @@ export function main(event, context, callback) {
                           fields: [
                             {
                               name: "__Recent Raid Progression__",
-                              value: `**Uldir:** ${characterUldirProgression}\n**Battle of Dazar'alor:** ${characterBoDProgression}\n**Crucible of Storms:** ${characterCrucibleProgression}\n**The Eternal Palace:** ${characterTEPProgression}`,
+                              value: `**Uldir:** ${characterUldirProgression}\n**Battle of Dazar'alor:** ${characterBoDProgression}\n**Crucible of Storms:** ${characterCrucibleProgression}\n**The Eternal Palace:** ${characterTEPProgression}\n**Ny'alotha:** ${characterNyAProgression}`,
                               inline: true
                             },
                             {
