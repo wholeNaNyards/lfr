@@ -1,6 +1,6 @@
 # lfr
 
-Core backend services for [lookingforraid.io](https://lookingforraid.io).
+Core Back End services for lookingforraid.io web service.
 <br />
 <br />
 Customizable recruitment alerter that notifies World of Warcraft guilds whenever a player is looking for a new guild.
